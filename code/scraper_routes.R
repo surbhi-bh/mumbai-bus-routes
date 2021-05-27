@@ -47,12 +47,9 @@ routename <- do.call(rbind,lapply(unique(route_address), function(g){
     
 routename <- as.data.frame(routename)
 
-# busdata <- data.frame(routeno, routename, route_address)
-#write.csv(busdata, "bestbusroutes.csv", row.names = FALSE)
-
-###############
-## Clean ups ##
-###############
+###########################
+## Get all route details ##
+###########################
 
 deets <- do.call(rbind,lapply(unique(route_address), function(g){
     webpg <- read_html(g)
@@ -66,6 +63,9 @@ deets <- do.call(rbind,lapply(unique(route_address), function(g){
 
 deets <- data.frame(deets)
 
+###############
+## Clean ups ##
+###############
 colnames(deets) <- c("Starting",
                      "Destination",
                      "TotalStops",
@@ -73,11 +73,21 @@ colnames(deets) <- c("Starting",
                      "Distance",
                      "FirstBusFromStartingPoint",
                      "LastBusFromStartingPoint",
-                     "FirstBusFromFromDestination",
+                     "FirstBusFromDestination",
                      "LastBusFromDestination")
 
 deets <- data.frame(lapply(deets, as.character), stringsAsFactors=FALSE)
 deets <- data.frame(apply(deets, 2, function(x) str_sub(x, end=-2)))
+
+deets$LastBusFromDestination <- ifelse(deets$Starting == deets$Destination,  NA, deets$LastBusFromDestination)
+
+deets$LastBusFromDestination <- ifelse(nchar(deets$LastBusFromDestination) > 5& nchar(deets$LastBusFromDestination) < 18,  NA, deets$LastBusFromDestination)
+
+deets$LastBusFromDestination <- ifelse(deets$LastBusFromDestination == "Dena Bank Kandival",  NA, deets$LastBusFromDestination)
+
+deets$FirstBusFromDestination <- ifelse(deets$Starting == deets$Destination,  NA, deets$FirstBusFromDestination)
+
+deets$FirstBusFromDestination <- ifelse(nchar(deets$FirstBusFromDestination) > 18,  NA, deets$FirstBusFromDestination)
 
 ################################
 ## Combine into one dataframe ##
